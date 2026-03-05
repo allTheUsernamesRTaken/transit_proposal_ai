@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import socket
 from typing import Any, Dict
 from urllib.parse import parse_qsl, urlparse, urlencode, urlunparse
 
@@ -31,9 +32,63 @@ def _ensure_sslmode(url: str) -> str:
     return url
 
 
+def _force_ipv4(url: str) -> str:
+    """
+    Rewrite the host portion of the URL to an IPv4 address.
+
+    Some hosting environments have trouble connecting to IPv6
+    addresses returned by DNS (EADDRNOTAVAIL / "Cannot assign
+    requested address"). This forces resolution to IPv4 while
+    keeping the rest of the connection string intact.
+    """
+    parsed = urlparse(url)
+    host = parsed.hostname
+
+    # If there's no hostname or it's already an IPv4 literal, do nothing.
+    if not host:
+        return url
+    try:
+        socket.inet_aton(host)
+        return url
+    except OSError:
+        pass
+
+    try:
+        info = socket.getaddrinfo(
+            host,
+            parsed.port or 5432,
+            family=socket.AF_INET,
+            type=socket.SOCK_STREAM,
+        )
+    except OSError:
+        return url
+
+    if not info:
+        return url
+
+    ipv4 = info[0][4][0]
+
+    # Rebuild netloc with username/password and port preserved.
+    userinfo = ""
+    if parsed.username:
+        userinfo += parsed.username
+        if parsed.password:
+            userinfo += f":{parsed.password}"
+        userinfo += "@"
+    port = f":{parsed.port}" if parsed.port else ""
+    new_netloc = f"{userinfo}{ipv4}{port}"
+
+    parsed = parsed._replace(netloc=new_netloc)
+    return urlunparse(parsed)
+
+
 def _get_database_url() -> str:
     url = get_required_secret("DATABASE_URL")
-    return _ensure_sslmode(url)
+    # Ensure SSL is required for Supabase and similar providers.
+    url = _ensure_sslmode(url)
+    # Force IPv4 resolution to avoid IPv6 connection issues on some hosts.
+    url = _force_ipv4(url)
+    return url
 
 
 DATABASE_URL = _get_database_url()

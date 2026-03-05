@@ -7,14 +7,15 @@ from typing import Dict, List, Tuple
 from .models import ProjectDefinition
 
 
-# Base hour estimates by project type
+# Base hour estimates by project type (keys align with PROJECT_TYPES in past_project)
 BASE_HOURS_BY_TYPE: Dict[str, int] = {
-    "coa": 500,  # Comprehensive Operational Analysis
-    "tdp": 600,  # Transit Development Plan
-    "its": 450,  # Intelligent Transportation Systems planning
-    "microtransit": 400,
-    "grant_support": 200,
-    "operational_review": 350,
+    "service_planning": 500,
+    "capital_infrastructure": 600,
+    "technology_its": 450,
+    "operations_performance": 400,
+    "grants_funding": 200,
+    "policy_strategic_planning": 500,
+    "misc_other": 300,
     "unknown": 300,
 }
 
@@ -33,23 +34,49 @@ def _normalize_text(project: ProjectDefinition) -> str:
 
 
 def _infer_project_type(text: str) -> Tuple[str, List[str]]:
-    """Infer a coarse project type label from free text."""
+    """Infer a coarse project type label from free text (aligned with PROJECT_TYPES)."""
     assumptions: List[str] = []
 
-    if "comprehensive operational analysis" in text or "coa" in text:
-        project_type = "coa"
-    elif "transit development plan" in text or "tdp" in text:
-        project_type = "tdp"
-    elif "intelligent transportation system" in text or "its " in text or "its-" in text:
-        project_type = "its"
-    elif "microtransit" in text or "on-demand" in text or "on demand" in text:
-        project_type = "microtransit"
-    elif "grant" in text and ("application" in text or "support" in text or "fta" in text):
-        project_type = "grant_support"
-    elif "operational review" in text or "operations review" in text:
-        project_type = "operational_review"
+    if (
+        "service planning" in text
+        or "comprehensive operational analysis" in text
+        or "coa" in text
+        or "route design" in text
+        or "network design" in text
+    ):
+        project_type = "service_planning"
+    elif (
+        "transit development plan" in text
+        or "tdp" in text
+        or "capital" in text
+        or "infrastructure" in text
+        or "facility" in text
+    ):
+        project_type = "capital_infrastructure"
+    elif (
+        "intelligent transportation system" in text
+        or "its " in text
+        or "its-" in text
+        or "technology" in text
+        or "avl" in text
+        or "fare system" in text
+    ):
+        project_type = "technology_its"
+    elif (
+        "microtransit" in text
+        or "on-demand" in text
+        or "on demand" in text
+        or "operational review" in text
+        or "operations review" in text
+        or "performance" in text
+    ):
+        project_type = "operations_performance"
+    elif "grant" in text and ("application" in text or "support" in text or "fta" in text or "funding" in text):
+        project_type = "grants_funding"
+    elif "policy" in text or "strategic plan" in text or "long range" in text:
+        project_type = "policy_strategic_planning"
     else:
-        project_type = "unknown"
+        project_type = "misc_other"
 
     assumptions.append(f"Base project type inferred as '{project_type}'.")
     return project_type, assumptions

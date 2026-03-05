@@ -13,12 +13,13 @@ AGENCY_TYPES = ["Urban", "Rural", "Regional", "Tribal"]
 
 # Project types for past project form
 PROJECT_TYPES = [
-    "COA",
-    "TDP",
-    "ITS",
-    "Microtransit",
-    "Grant Support",
-    "Operational Review",
+    "Service Planning",
+    "Capital & Infrastructure",
+    "Technology & ITS",
+    "Operations & Performance",
+    "Grants & Funding",
+    "Policy & Strategic Planning",
+    "Misc / Other",
 ]
 
 

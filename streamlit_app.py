@@ -152,7 +152,8 @@ with st.expander("Manage Past Transit Projects", expanded=False):
                 delete_document(row["id"])
                 st.rerun()
     else:
-        st.caption("No past projects yet. Add one above.")
+        #st.caption("No past projects yet. Add one above.")
+        pass
 
 # --- Section 1: Upload transcript ---
 st.subheader("1. Transcript")

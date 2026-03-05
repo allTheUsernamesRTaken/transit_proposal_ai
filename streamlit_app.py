@@ -121,7 +121,7 @@ with st.expander("Manage Past Transit Projects", expanded=False):
 
     # B. List existing projects with delete (loaded on demand)
     st.write("**Existing past projects**")
-    if st.button("Load existing projects"):
+    if st.button("Show existing projects"):
         st.session_state.past_projects_loaded = True
 
     docs = []

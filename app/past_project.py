@@ -2,7 +2,7 @@
 Past transit project schema and summary builder for storage and retrieval.
 
 Used by the "Manage Past Transit Projects" UI and by the retriever.
-U.S. public transit consulting context: bus agencies, rural transit, FTA-funded.
+Public transit consulting context: bus agencies, rural transit, grant-funded.
 """
 from __future__ import annotations
 
@@ -43,12 +43,12 @@ def build_past_project_summary(
         title,
         f"Agency type: {agency_type}.",
         f"Project type: {project_type}.",
-        f"State: {state}.",
+        f"State/Province: {state}.",
     ]
     if fleet_size:
         parts.append(f"Fleet size: {fleet_size}.")
     if fta_program:
-        parts.append(f"FTA program: {fta_program}.")
+        parts.append(f"Funding program: {fta_program}.")
     if total_hours is not None:
         parts.append(f"Total hours: {total_hours}.")
     if timeline_months is not None:

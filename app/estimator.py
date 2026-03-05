@@ -116,7 +116,7 @@ def _count_public_workshops(project: ProjectDefinition) -> Tuple[int, List[str]]
 
 
 def _detect_fta_funding(text: str) -> Tuple[bool, List[str]]:
-    """Detect whether FTA funding is mentioned."""
+    """Detect whether grant/transit funding (e.g. FTA or similar) is mentioned."""
     assumptions: List[str] = []
     fta_keywords = (
         "fta",
@@ -131,9 +131,9 @@ def _detect_fta_funding(text: str) -> Tuple[bool, List[str]]:
 
     has_fta = any(k in text for k in fta_keywords)
     if has_fta:
-        assumptions.append("FTA-related funding or programs mentioned.")
+        assumptions.append("Grant/transit funding or programs mentioned.")
     else:
-        assumptions.append("FTA funding not explicitly mentioned.")
+        assumptions.append("Grant/transit funding not explicitly mentioned.")
     return has_fta, assumptions
 
 

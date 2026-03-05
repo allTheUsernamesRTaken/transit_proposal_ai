@@ -1,7 +1,7 @@
 """
 Transit Proposal AI — Streamlit UI.
 
-U.S. public transit consulting: bus agencies, rural transit, FTA-funded.
+Public transit consulting: bus agencies, rural transit, grant-funded.
 Uses Supabase Postgres (pgvector), OpenAI embeddings and chat.
 """
 from __future__ import annotations
@@ -80,16 +80,16 @@ with st.expander("Manage Past Transit Projects", expanded=False):
     add_title = st.text_input("Project Title", key="add_title")
     add_agency_type = st.selectbox("Agency Type", AGENCY_TYPES, key="add_agency_type")
     add_project_type = st.selectbox("Project Type", PROJECT_TYPES, key="add_project_type")
-    add_state = st.text_input("State", key="add_state")
+    add_state = st.text_input("State/Province", key="add_state")
     add_fleet_size = st.text_input("Fleet Size", key="add_fleet_size")
-    add_fta_program = st.text_input("FTA Program (optional)", key="add_fta_program")
+    add_fta_program = st.text_input("Funding/Grant Program (optional)", key="add_fta_program")
     add_total_hours = st.number_input("Total Hours", min_value=0, value=0, step=1, key="add_total_hours")
     add_timeline_months = st.number_input("Timeline (months)", min_value=0, value=0, step=1, key="add_timeline_months")
     add_summary = st.text_area("Project Summary", height=120, key="add_summary")
 
     if st.button("Save past project"):
         if not (add_title and add_state):
-            st.warning("Project Title and State are required.")
+            st.warning("Project Title and State/Province are required.")
         else:
             try:
                 content = build_past_project_summary(
@@ -136,7 +136,7 @@ with st.expander("Manage Past Transit Projects", expanded=False):
         header_cols = st.columns([3, 1, 1, 1, 1, 1])
         header_cols[0].write("**Title**")
         header_cols[1].write("**Project Type**")
-        header_cols[2].write("**State**")
+        header_cols[2].write("**State/Province**")
         header_cols[3].write("**Hours**")
         header_cols[4].write("**Timeline**")
         header_cols[5].write("")

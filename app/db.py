@@ -9,6 +9,8 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import JSON, Column, Integer, String, Text, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
+from app.settings import get_required_secret
+
 
 load_dotenv()
 
@@ -30,9 +32,7 @@ def _ensure_sslmode(url: str) -> str:
 
 
 def _get_database_url() -> str:
-    url = os.getenv("DATABASE_URL")
-    if not url:
-        raise RuntimeError("DATABASE_URL environment variable is not set.")
+    url = get_required_secret("DATABASE_URL")
     return _ensure_sslmode(url)
 
 

@@ -9,23 +9,23 @@ import psycopg2
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from app.settings import get_required_secret
+
 
 def _load_env() -> None:
-    # Load variables from a .env file if present.
+    # Load variables from a .env file if present for local development.
     load_dotenv()
 
 
 def _get_database_url() -> str:
-    url = os.getenv("DATABASE_URL")
-    if not url:
-        raise RuntimeError("DATABASE_URL environment variable is not set.")
+    # Use Streamlit secrets if available, otherwise fall back to environment.
+    url = get_required_secret("DATABASE_URL")
     return url
 
 
 def _get_openai_client() -> OpenAI:
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
+    # Use Streamlit secrets if available, otherwise fall back to environment.
+    api_key = get_required_secret("OPENAI_API_KEY")
     return OpenAI(api_key=api_key)
 
 

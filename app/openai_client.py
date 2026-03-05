@@ -1,22 +1,23 @@
 """
 OpenAI chat completion helper for Transit Proposal AI.
-Uses OPENAI_API_KEY from the environment (same key as for embeddings).
+
+Uses configuration from Streamlit secrets (secrets.toml / Secrets UI)
+or, as a fallback, from standard environment variables.
 """
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 from openai import OpenAI
 
+from app.settings import get_required_secret, get_setting
 
-DEFAULT_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.2")
+
+DEFAULT_CHAT_MODEL = get_setting("OPENAI_CHAT_MODEL", "gpt-5.2")
 
 
 def _get_client(api_key: Optional[str] = None) -> OpenAI:
-    key = api_key or os.getenv("OPENAI_API_KEY")
-    if not key:
-        raise RuntimeError("OPENAI_API_KEY environment variable is not set.")
+    key = api_key or get_required_secret("OPENAI_API_KEY")
     return OpenAI(api_key=key)
 
 

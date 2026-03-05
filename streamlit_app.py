@@ -253,7 +253,7 @@ project_type_filter = st.selectbox(
     format_func=lambda x: "(no filter)" if x is None else x,
     key="proposal_project_type_filter",
 )
-if st.button("Generate Proposal"):
+if st.button("Generate Draft Proposal"):
     project = _parse_project_from_json()
     if project is None:
         st.warning("Extract and fix project definition first.")

@@ -10,7 +10,7 @@ from typing import Optional
 from openai import OpenAI
 
 
-DEFAULT_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")
+DEFAULT_CHAT_MODEL = os.getenv("OPENAI_CHAT_MODEL", "gpt-5.2")
 
 
 def _get_client(api_key: Optional[str] = None) -> OpenAI:
@@ -25,17 +25,19 @@ def call_openai(
     user_prompt: str,
     temperature: float = 0.2,
     model: str = DEFAULT_CHAT_MODEL,
-    max_tokens: int = 2048,
+    max_completion_tokens: int = 2048,
     api_key: Optional[str] = None,
 ) -> str:
     """
-    Call OpenAI chat completions (e.g. GPT-4o-mini) with system + user message.
-    Single entry point for extractor, clarifier, and drafter.
+    Call OpenAI chat completions (GPT-5.2 or another specified model)
+    with system + user message.
+
+    This is the single entry point for extractor, clarifier, and drafter.
     """
     client = _get_client(api_key=api_key)
     response = client.chat.completions.create(
         model=model,
-        max_tokens=max_tokens,
+        max_completion_tokens=max_completion_tokens,
         temperature=temperature,
         messages=[
             {"role": "system", "content": system_prompt},

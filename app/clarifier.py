@@ -5,7 +5,7 @@ import logging
 from json import JSONDecodeError
 from typing import List
 
-from .claude_client import call_claude
+from .chatgpt_client import call_chatgpt
 from .models import ProjectDefinition
 
 
@@ -81,7 +81,8 @@ def _parse_questions(raw: str) -> List[str]:
 
 def generate_clarification_questions(project: ProjectDefinition) -> List[str]:
     """
-    Use Claude to generate 2–4 short clarification questions for a project.
+    Use OpenAI GPT-5.2 (via call_chatgpt wrapper) to generate 2–4 short
+    clarification questions for a project.
 
     - Uses a transit-focused system prompt.
     - Temperature fixed at 0.2.
@@ -92,7 +93,7 @@ def generate_clarification_questions(project: ProjectDefinition) -> List[str]:
     last_error: Exception | None = None
 
     for attempt in range(2):
-        raw = call_claude(
+        raw = call_chatgpt(
             system_prompt=SYSTEM_PROMPT,
             user_prompt=user_prompt,
             temperature=0.2,
@@ -111,7 +112,7 @@ def generate_clarification_questions(project: ProjectDefinition) -> List[str]:
         except JSONDecodeError as exc:
             last_error = exc
             logger.warning(
-                "Failed to parse clarification questions JSON from Claude on attempt %d: %s",
+                "Failed to parse clarification questions JSON from model on attempt %d: %s",
                 attempt + 1,
                 exc,
             )

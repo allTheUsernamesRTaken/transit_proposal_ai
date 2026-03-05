@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ProjectMode(str, Enum):
@@ -74,10 +74,89 @@ class ProjectDefinition(BaseModel):
         description="Transit modes that are central to this project.",
     )
 
+    @field_validator("primary_transit_modes", mode="before")
+    @classmethod
+    def _coerce_primary_transit_modes(cls, v: object) -> object:
+        """
+        GPT outputs sometimes use non-enum labels like "demand_response".
+        Coerce common variants to the closest allowed TransitMode value.
+        """
+        if v is None:
+            return []
+
+        def _coerce_one(item: object) -> object:
+            if isinstance(item, TransitMode):
+                return item
+            if not isinstance(item, str):
+                return item
+            s = item.strip().lower()
+            if not s:
+                return item
+
+            # Exact/substring matches of defined enum values
+            for mode in TransitMode:
+                if s == mode.value or mode.value in s:
+                    return mode
+
+            # Common synonyms / variants
+            if any(k in s for k in ("demand_response", "demand response", "paratransit", "dial-a-ride", "dial a ride", "demand-responsive")):
+                return TransitMode.ON_DEMAND
+            if any(k in s for k in ("on demand", "on-demand")):
+                return TransitMode.ON_DEMAND
+            if any(k in s for k in ("micro transit", "micro-transit")):
+                return TransitMode.MICROTRANSIT
+
+            # Fall back to original value; Pydantic will raise if truly invalid.
+            return item
+
+        if isinstance(v, list):
+            return [_coerce_one(item) for item in v]
+
+        # Allow a single value instead of a list
+        return [_coerce_one(v)]
+
     project_mode: ProjectMode = Field(
         default=ProjectMode.PLANNING,
         description="Overall lifecycle phase of the project.",
     )
+    
+    @field_validator("project_mode", mode="before")
+    @classmethod
+    def _coerce_project_mode(cls, v: object) -> object:
+        """
+        GPT outputs sometimes put a descriptive phrase in project_mode.
+        Coerce common variants to the closest allowed enum value.
+        """
+        if v is None:
+            return ProjectMode.PLANNING
+        if isinstance(v, ProjectMode):
+            return v
+        if isinstance(v, str):
+            s = v.strip().lower()
+            if not s:
+                return ProjectMode.PLANNING
+
+            # Exact/substring matches of allowed values.
+            for mode in ProjectMode:
+                if s == mode.value or mode.value in s:
+                    return mode
+
+            # Heuristic mapping for common lifecycle language.
+            if any(k in s for k in ("feasibility", "alternatives analysis", "aa", "screening", "viability")):
+                return ProjectMode.FEASIBILITY
+            if any(k in s for k in ("design", "preliminary engineering", "30%", "60%", "90%", "engineering")):
+                return ProjectMode.DESIGN
+            if any(k in s for k in ("implement", "implementation", "rollout", "deployment", "procurement", "deliver", "execute")):
+                return ProjectMode.IMPLEMENTATION
+            if any(k in s for k in ("evaluate", "evaluation", "monitor", "kpi", "performance", "optimization", "after-action")):
+                return ProjectMode.EVALUATION
+            if any(k in s for k in ("plan", "planning", "strategy", "study", "tdp", "coa", "concept")):
+                return ProjectMode.PLANNING
+
+            # Safe default to avoid hard failures.
+            return ProjectMode.PLANNING
+
+        return v
 
     objectives: List[str] = Field(
         default_factory=list,

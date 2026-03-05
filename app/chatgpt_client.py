@@ -2,26 +2,26 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .chatgpt_client import DEFAULT_CHATGPT_MODEL, call_chatgpt
+from .openai_client import DEFAULT_CHAT_MODEL, call_openai
 
 
-DEFAULT_CLAUDE_MODEL = DEFAULT_CHATGPT_MODEL
+DEFAULT_CHATGPT_MODEL = DEFAULT_CHAT_MODEL
 
 
-def call_claude(
+def call_chatgpt(
     system_prompt: str,
     user_prompt: str,
     temperature: float = 0.2,
-    model: str = DEFAULT_CLAUDE_MODEL,
+    model: str = DEFAULT_CHATGPT_MODEL,
     max_completion_tokens: int = 2048,
     api_key: Optional[str] = None,
 ) -> str:
     """
-    Backward-compatible wrapper for older modules.
+    ChatGPT (OpenAI) chat completion helper.
 
-    Despite the name, this now calls ChatGPT (OpenAI) under the hood.
+    Defaults to GPT-5.2 via OPENAI_CHAT_MODEL, and uses OPENAI_API_KEY.
     """
-    return call_chatgpt(
+    return call_openai(
         system_prompt=system_prompt,
         user_prompt=user_prompt,
         temperature=temperature,
@@ -29,3 +29,4 @@ def call_claude(
         max_completion_tokens=max_completion_tokens,
         api_key=api_key,
     )
+

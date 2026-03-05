@@ -4,7 +4,7 @@ import json
 import logging
 from json import JSONDecodeError
 
-from .claude_client import call_claude
+from .chatgpt_client import call_chatgpt
 from .models import ProjectDefinition
 
 
@@ -74,6 +74,7 @@ OUTPUT FORMAT:
   }
 
 ADDITIONAL GUIDANCE:
+- project_mode MUST be exactly one of: "planning", "feasibility", "design", "implementation", "evaluation".
 - If you are not certain about project_name or client_name, set them to "unknown".
 - For numeric fields like timeline_months and budget_usd, use null when not supported by the transcript.
 - For list fields, use an empty list [] when there is no reliable information.
@@ -119,9 +120,10 @@ def _parse_json_strict(raw: str) -> dict:
 
 def extract_project_definition(transcript: str) -> ProjectDefinition:
     """
-    Use Claude to extract a ProjectDefinition from free-text transcript input.
+    Use OpenAI GPT-5.2 (via call_chatgpt wrapper) to extract a ProjectDefinition
+    from free-text transcript input.
 
-    - Uses a transit-specific system prompt and call_claude().
+    - Uses a transit-specific system prompt and call_chatgpt().
     - Temperature fixed at 0.1 for determinism.
     - Expects strict JSON-only output and parses it.
     - Retries once if JSON parsing fails.
@@ -132,7 +134,7 @@ def extract_project_definition(transcript: str) -> ProjectDefinition:
     last_error: Exception | None = None
 
     for attempt in range(2):
-        raw = call_claude(
+        raw = call_chatgpt(
             system_prompt=SYSTEM_PROMPT,
             user_prompt=user_prompt,
             temperature=0.1,
@@ -145,7 +147,7 @@ def extract_project_definition(transcript: str) -> ProjectDefinition:
         except JSONDecodeError as exc:
             last_error = exc
             logger.warning(
-                "Failed to parse JSON from Claude on attempt %d: %s",
+                "Failed to parse JSON from model on attempt %d: %s",
                 attempt + 1,
                 exc,
             )

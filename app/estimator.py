@@ -133,7 +133,7 @@ def estimate_effort(project: ProjectDefinition) -> Dict[str, object]:
     """
     Estimate effort (hours and timeline) for a transit consulting project.
 
-    This is a simple, deterministic heuristic that does not call Claude.
+    This is a simple, deterministic heuristic that does not call the LLM.
     """
     assumptions: List[str] = []
     text = _normalize_text(project)

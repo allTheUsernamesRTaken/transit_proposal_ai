@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from .claude_client import call_claude
+from .chatgpt_client import call_chatgpt
 from .db import Document
 from .models import ProjectDefinition
 from .retriever import similarity_search
@@ -11,7 +11,7 @@ from .retriever import similarity_search
 _MAX_SUMMARY_CHARS = 600
 
 
-def _project_to_query(project: ProjectDefinition) -> str:
+def project_to_query(project: ProjectDefinition) -> str:
     """Build a short query string from the structured project for vector search."""
     parts: List[str] = []
 
@@ -37,11 +37,11 @@ def _project_to_query(project: ProjectDefinition) -> str:
 
 
 def _format_comparable_projects(docs: List[Document]) -> str:
-    """Format retrieved documents as a 'Comparable Past Projects' block."""
+    """Format retrieved documents as 'Comparable Past Transit Projects' block for the model."""
     if not docs:
-        return "Comparable Past Projects:\nNone provided."
+        return "Comparable Past Transit Projects:\nNone provided."
 
-    lines = ["Comparable Past Projects:"]
+    lines = ["Comparable Past Transit Projects:"]
     for i, doc in enumerate(docs, 1):
         title = doc.title or f"Project {i}"
         content = doc.content or ""
@@ -56,8 +56,9 @@ SYSTEM_PROMPT = """You are a senior transit consultant writing a professional pr
 Your tone is professional, precise, and transit-specific. Avoid marketing fluff and vague promises. Focus on implementable scope and clear deliverables.
 
 STRICT RULES:
-- Do NOT invent or fabricate case studies, past projects, or references. Use only the "Comparable Past Projects" material provided; if none is provided, do not reference specific past work.
-- Do NOT alter, round, or reinterpret any numeric estimates (hours, budget, timeline) that are provided to you. Use the given numbers exactly in the Budget & Assumptions and Timeline sections.
+- Use the "Comparable Past Transit Projects" material only for contextual grounding. Do NOT copy them verbatim. Do NOT invent numbers or case details not provided.
+- Do NOT contradict the deterministic estimate: use the given hours, budget, and timeline exactly in the Budget & Assumptions and Timeline sections.
+- Do NOT invent or fabricate case studies or past projects beyond what is provided; if none is provided, do not reference specific past work.
 - Base the proposal strictly on the project definition and the estimate provided. Do not add scope that is not already implied or stated.
 
 STRUCTURE:
@@ -103,20 +104,32 @@ def _build_user_prompt(
 Generate the full proposal (1500–2500 words) with the eight sections listed in the system prompt. Output plain text only."""
 
 
-def generate_proposal(project: ProjectDefinition, estimate: Dict[str, Any]) -> str:
+def generate_proposal(
+    project: ProjectDefinition,
+    estimate: Dict[str, Any],
+    comparable_docs: Optional[List[Document]] = None,
+    project_type_filter: Optional[str] = None,
+) -> str:
     """
     Generate a transit consulting proposal using the project definition, estimate,
-    and up to three comparable past projects retrieved by vector search.
-    """
-    query = _project_to_query(project)
-    docs = similarity_search(query, k=3)
-    comparable_block = _format_comparable_projects(docs)
+    and up to three comparable past projects.
 
+    If comparable_docs is provided, those are used; otherwise runs vector search
+    (with optional project_type_filter). Uses OpenAI via call_chatgpt.
+    """
+    if comparable_docs is not None:
+        docs = comparable_docs
+    else:
+        query = project_to_query(project)
+        docs = similarity_search(query, k=3, project_type=project_type_filter)
+
+    comparable_block = _format_comparable_projects(docs)
     user_prompt = _build_user_prompt(project, estimate, comparable_block)
 
-    return call_claude(
+    return call_chatgpt(
         system_prompt=SYSTEM_PROMPT,
         user_prompt=user_prompt,
         temperature=0.3,
-        max_tokens=4096,
+        max_completion_tokens=4096,
     )
+

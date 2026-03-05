@@ -160,7 +160,7 @@ uploaded = st.file_uploader("Upload transcript", type=["txt"], label_visibility=
 if uploaded is not None:
     st.session_state.transcript_text = uploaded.read().decode("utf-8", errors="replace")
 if st.session_state.transcript_text:
-    st.text_area("Transcript content", value=st.session_state.transcript_text, height=120, key="transcript_text")
+    st.text_area("Transcript content", height=120, key="transcript_text")
 
 # --- Extract Project Definition ---
 if st.button("Extract Project Definition"):

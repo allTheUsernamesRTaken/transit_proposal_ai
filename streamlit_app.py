@@ -119,10 +119,14 @@ with st.expander("Manage Past Transit Projects", expanded=False):
             except Exception as e:
                 st.error(str(e))
 
-    # B. List existing projects with delete (loaded on demand)
+    # B. List existing projects with delete (show/hide toggle)
     st.write("**Existing past projects**")
-    if st.button("Show existing projects"):
-        st.session_state.past_projects_loaded = True
+    show_projects = st.session_state.past_projects_loaded
+    toggle_label = "Hide projects" if show_projects else "Show existing projects"
+    if st.button(toggle_label, key="toggle_past_projects"):
+        # Toggle visibility of the existing projects list, then rerun so label + list are in sync
+        st.session_state.past_projects_loaded = not show_projects
+        st.rerun()
 
     docs = []
     if st.session_state.past_projects_loaded:

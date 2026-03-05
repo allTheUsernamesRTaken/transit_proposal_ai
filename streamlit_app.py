@@ -57,10 +57,10 @@ def _parse_project_from_json() -> ProjectDefinition | None:
         return None
 
 
-st.set_page_config(page_title="KTS | Proposal AI Assistant", layout="centered")
+st.set_page_config(page_title="KTS | Transit Proposal AI", layout="centered")
 _init_session_state()
 
-st.title("KTS | Proposal AI Assistant")
+st.title("KTS | Transit Proposal AI")
 
 with st.sidebar:
     st.subheader("Performance")

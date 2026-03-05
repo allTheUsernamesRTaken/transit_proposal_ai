@@ -91,11 +91,28 @@ def _get_database_url() -> str:
     return url
 
 
+def _engine_connect_args(url: str) -> dict:
+    """
+    Connection args for the engine. Supabase transaction pooler (port 6543)
+    does not support prepared statements; disable them to avoid runtime errors.
+    """
+    parsed = urlparse(url)
+    if parsed.port == 6543:
+        return {"prepare_threshold": 0}
+    return {}
+
+
 DATABASE_URL = _get_database_url()
 
+# For deployed apps (e.g. Streamlit Cloud): if you see "Cannot assign requested
+# address" when using Supabase, set DATABASE_URL in secrets to the Session mode
+# pooler (not the direct connection). In Supabase: Connect → Session mode →
+# copy the URI (host aws-0-<region>.pooler.supabase.com, port 5432). That
+# endpoint supports IPv4; the direct db.*.supabase.co connection is IPv6-only.
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
+    connect_args=_engine_connect_args(DATABASE_URL),
 )
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)

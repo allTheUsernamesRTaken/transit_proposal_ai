@@ -8,6 +8,7 @@ from urllib.parse import parse_qsl, urlparse, urlencode, urlunparse
 from dotenv import load_dotenv
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import JSON, Column, Integer, String, Text, create_engine
+from sqlalchemy.event import listens_for
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.settings import get_required_secret
@@ -91,15 +92,14 @@ def _get_database_url() -> str:
     return url
 
 
-def _engine_connect_args(url: str) -> dict:
+def _set_no_prepared_statements(dbapi_connection, _connection_record):
     """
-    Connection args for the engine. Supabase transaction pooler (port 6543)
-    does not support prepared statements; disable them to avoid runtime errors.
+    Disable prepared statements on the raw psycopg2 connection.
+    Required for Supabase transaction pooler (port 6543), which does not
+    support them.
     """
-    parsed = urlparse(url)
-    if parsed.port == 6543:
-        return {"prepare_threshold": 0}
-    return {}
+    if hasattr(dbapi_connection, "prepare_threshold"):
+        dbapi_connection.prepare_threshold = 0
 
 
 DATABASE_URL = _get_database_url()
@@ -112,8 +112,11 @@ DATABASE_URL = _get_database_url()
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
-    connect_args=_engine_connect_args(DATABASE_URL),
 )
+
+# Transaction pooler (port 6543) does not support prepared statements.
+if urlparse(DATABASE_URL).port == 6543:
+    listens_for(engine, "connect")(_set_no_prepared_statements)
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
